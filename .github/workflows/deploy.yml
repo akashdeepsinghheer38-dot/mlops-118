@@ -9,7 +9,7 @@ jobs:
     mock-build:
       runs-on: ubuntu-latest
       outputs:
-        images: ${{steps.build.outputs.image}}
+        image: ${{steps.build.outputs.image}}
       steps:
         - name: Checkout Code
           uses: actions/checkout@v4
@@ -20,11 +20,21 @@ jobs:
         - name: Mock - Login to Docker
           run: echo "Docker login"
 
-        - name: Mock - Build Docker image
+        - name: Mock - Build Docker Image
           run : echo "Docker build"
 
         - name: Mock - Push image to ECR
           id : build
           run : echo "Docker push"
 
-          
+    mock-deploy:
+      needs: mock-build
+      runs-on: ubuntu-latest
+      steps:
+        - name: Mock - SSH into EC2 and redeploy
+          run: |
+            echo "docker pull house-preiction-model"
+            echo "docker stop"
+            echo "docker rm"
+            echo "docker run"
+            echo "Public ip : 56.7.7.7:8000"
