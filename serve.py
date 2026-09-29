@@ -25,6 +25,7 @@ class HouseFeatures(BaseModel):
     bedrooms: int = Field(...,gt=0,le=20)
     bathrooms: int = Field(...,gt=0,le=200)
     age_years: int = Field(...,gt=0 , le=10)
+    garage: int = Field(..., ge=0, le=10)
     location_score: int = Field(...,ge=1 , le=10)
     
 
