@@ -3,7 +3,6 @@ __pycache__/
 *.pyc
 .git/
 .github/
-mlartifacts/
 mlflow.db
 .ipynb_checkpoints/
 .vscode/
