@@ -8,22 +8,36 @@ import pandas as pd
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel , Field
+from pydantic import BaseModel, Field
 
-BASE_DIR=Path(__file__).resolve().parent
-# TRACKING_URI=os.getenv("MLFLOW_TRACKING","http://127.0.0.1:5000")
+
+BASE_DIR = Path(__file__).resolve().parent
+
+# MLflow server URL
 TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING",
-    "http://mlflow:5000"
+    "http://127.0.0.1:5000"
 )
 
-MODEL_URI= "models:/house-price-predictor@champion"
-FEATURES=["sqft","bedrooms","bathrooms","age_years","garage","location_score"]
+MODEL_URI = "models:/house-price-predictor@champion"
 
+FEATURES = [
+    "sqft",
+    "bedrooms",
+    "bathrooms",
+    "age_years",
+    "garage",
+    "location_score"
+]
+
+# Connect to MLflow
 mlflow.set_tracking_uri(TRACKING_URI)
-model=mlflow.sklearn.load_model(MODEL_URI)
 
-app= FastAPI(title="House Price Predictor")
+# Load registered model
+model = mlflow.sklearn.load_model(MODEL_URI)
+
+
+app = FastAPI(title="House Price Predictor")
 
 
 class HouseFeatures(BaseModel):
@@ -33,20 +47,40 @@ class HouseFeatures(BaseModel):
     age_years: int = Field(..., ge=0, le=100)
     garage: int = Field(..., ge=0, le=10)
     location_score: int = Field(..., ge=1, le=10)
-    
+
 
 @app.get("/health")
 def health():
-    return {"status":"healthy","model":MODEL_URI}
+    return {
+        "status": "healthy",
+        "model": MODEL_URI
+    }
+
 
 @app.post("/predict")
-def perict(features:HouseFeatures):
-    input_df=pd.DataFrame([features.model_dump()],columns=FEATURES)
+def predict(features: HouseFeatures):
+
+    input_df = pd.DataFrame(
+        [features.model_dump()],
+        columns=FEATURES
+    )
+
     prediction = model.predict(input_df)[0]
-    return {"predicted_price": round(float(prediction), 2)}
-    
-app.mount("/static",StaticFiles(directory=BASE_DIR / "static"))
+
+    return {
+        "predicted_price": round(float(prediction), 2)
+    }
+
+
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "static"),
+    name="static"
+)
+
 
 @app.get("/")
 def frontend():
-    return FileResponse(BASE_DIR / "static" / "index.html")
+    return FileResponse(
+        BASE_DIR / "static" / "index.html"
+    )
