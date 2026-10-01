@@ -1,3 +1,4 @@
+
 name: House Price ML CI/CD
 
 on:
@@ -7,10 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
+
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -21,23 +24,31 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest .
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest .
 
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest
+        run: |
+          docker push \
+            ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest
+
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
+
             echo "Pulling latest Docker image..."
             docker pull ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest
 
@@ -53,7 +64,14 @@ jobs:
               -p 8000:8000 \
               ${{ secrets.DOCKER_USERNAME }}/house-price-api:latest
 
+            echo "Waiting for application..."
+            sleep 5
+
             echo "Checking container..."
             docker ps
 
+            echo "Checking application health..."
+            curl --fail http://127.0.0.1:8000/health
+
             echo "Deployment completed successfully!"
+
